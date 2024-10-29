@@ -87,6 +87,23 @@ public final class GlobalRouter {
         routingPath.wrappedValue.append(route)
     }
 
+    public func navigate2<R: Routing>(to route: R.Route, with router: Router<R>) where R.Route: Hashable {
+        let registeredRoute = routers.first { obj in
+            guard let value = obj.value else {
+                return false
+            }
+
+            return value is Router<R>
+        }
+
+        guard registeredRoute != nil else {
+            fatalError("Router: \(router) is not attached to the view hierarchy. Use `navigationDestination(router:)` to add router")
+        }
+
+        routers.reap()
+        routingPath.wrappedValue.append(route)
+    }
+
     /// Navigates back to the root of the navigation stack.
     public func backToRoot() {
         guard !routingPath.wrappedValue.isEmpty else {
