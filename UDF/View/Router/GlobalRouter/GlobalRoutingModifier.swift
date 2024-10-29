@@ -50,10 +50,12 @@ struct GlobalRoutingModifier<R: Routing>: ViewModifier where R.Route: Hashable {
     /// - Returns: A view that adds the router to the global navigation system and sets up navigation destinations.
     func body(content: Content) -> some View {
         let _ = self.globalRouter.add(router: router)
-        content
+        return content
             .navigationDestination(
                 for: R.Route.self,
-                destination: router.view(for:)
+                destination: {
+                    router.view(for: $0)
+                }
             )
     }
 }
