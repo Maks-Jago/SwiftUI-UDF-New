@@ -85,6 +85,10 @@ public extension View {
         modifier(GlobalRoutingModifier(routing: routing))
     }
 
+    @available(*, deprecated, message: "Use `navigationDestination(for: MyRouting.self)` instead.")
+    func navigationDestination<R: Routing>(router: Router<R>) -> some View where R.Route: Hashable {
+        modifier(GlobalRoutingModifier(routing: R.self))
+    }
 }
 #endif
 
