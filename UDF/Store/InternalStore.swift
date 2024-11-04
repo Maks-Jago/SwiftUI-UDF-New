@@ -15,7 +15,7 @@ actor InternalStore<State: AppReducer>: Store {
     let subject: PassthroughSubject<(State, State, Animation?), Never> = .init()
 
     var loggers: [ActionLogger]
-    var middlewares: Set<AnyMiddleware> = []
+    var middlewares: OrderedSet<AnyMiddleware> = []
     private let storeQueue: StoreQueue = .init()
     private let logDistributor: LogDistributor
 
@@ -53,7 +53,7 @@ actor InternalStore<State: AppReducer>: Store {
     }
 
     func subscribe(_ middleware: some Middleware<State>) async {
-        middlewares.insert(AnyMiddleware(middleware))
+        middlewares.append(AnyMiddleware(middleware))
 
         switch middleware {
         case let middleware as any ObservableMiddleware<State>:
