@@ -15,7 +15,7 @@ actor InternalStore<State: AppReducer>: Store {
     let subject: PassthroughSubject<(State, State, Animation?), Never> = .init()
 
     var loggers: [ActionLogger]
-    var middlewares: [any Middleware] = []
+    var middlewares: Set<AnyMiddleware> = []
     private let storeQueue: StoreQueue = .init()
     private let logDistributor: LogDistributor
 
@@ -53,7 +53,7 @@ actor InternalStore<State: AppReducer>: Store {
     }
 
     func subscribe(_ middleware: some Middleware<State>) async {
-        middlewares.append(middleware)
+        middlewares.insert(AnyMiddleware(middleware))
 
         switch middleware {
         case let middleware as any ObservableMiddleware<State>:
@@ -116,7 +116,8 @@ private extension InternalStore {
 // MARK: Notify Methods
 private extension InternalStore {
     func notifyMiddlewares(_ actions: [InternalAction], oldState: Box<State>, newState: Box<State>) async {
-        for middleware in middlewares {
+        for anyMiddleware in middlewares {
+            let middleware = anyMiddleware.middleware
             switch middleware {
             case let middleware as any ReducibleMiddleware<State>:
                 await notifyReducible(middleware: middleware, actions: actions, newState: newState)
