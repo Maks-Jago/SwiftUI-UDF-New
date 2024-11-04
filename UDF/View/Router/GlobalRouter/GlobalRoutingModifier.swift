@@ -40,8 +40,8 @@ struct GlobalRoutingModifier<R: Routing>: ViewModifier where R.Route: Hashable {
     /// Initializes the modifier with the specified router.
     ///
     /// - Parameter router: The router to be added to the global navigation system.
-    init(router: Router<R>) {
-        self.router = router
+    init(routing: R.Type) {
+        self.router = .init(routing: R())
     }
 
     /// Modifies the content view to add the router to the global router and set up navigation destinations.
@@ -50,10 +50,12 @@ struct GlobalRoutingModifier<R: Routing>: ViewModifier where R.Route: Hashable {
     /// - Returns: A view that adds the router to the global navigation system and sets up navigation destinations.
     func body(content: Content) -> some View {
         let _ = self.globalRouter.add(router: router)
-        content
+        return content
             .navigationDestination(
                 for: R.Route.self,
-                destination: router.view(for:)
+                destination: {
+                    router.view(for: $0)
+                }
             )
     }
 }

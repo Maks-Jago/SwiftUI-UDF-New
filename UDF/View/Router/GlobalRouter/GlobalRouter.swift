@@ -76,13 +76,23 @@ public final class GlobalRouter {
                 return false
             }
 
-            return ObjectIdentifier(value) == ObjectIdentifier(router)
+            return value is Router<R>
         }
 
         guard registeredRoute != nil else {
-            fatalError("Router: \(router) is not attached to the view hierarchy. Use `navigationDestination(router:)` to add router")
+            fatalError("Routing: \(R.self) is not attached to the view hierarchy. Use `navigationDestination(for: MyRouting.self)` to add routing")
         }
 
+        routers.reap()
+        routingPath.wrappedValue.append(route)
+    }
+
+    /// Navigates to a specified route.
+    ///
+    /// - Parameters:
+    ///   - routing: The routing type to use for navigation.
+    ///   - route: The route to navigate to.
+    public func navigate<R: Routing>(for routing: R.Type, to route: R.Route) where R.Route: Hashable {
         routers.reap()
         routingPath.wrappedValue.append(route)
     }
