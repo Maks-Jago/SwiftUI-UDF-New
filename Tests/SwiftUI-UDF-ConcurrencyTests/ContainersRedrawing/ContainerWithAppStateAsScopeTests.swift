@@ -42,25 +42,11 @@ final class ContainerWithAppStateAsScopeTests: XCTestCase {
         var isUserLoggedIn: Bool = false
     }
 
-    func createWindow(with container: some Container) async -> UIWindow {
-        await MainActor.run {
-            let window = UIWindow(frame: .zero)
-            let viewController = UIHostingController(rootView: container)
-            window.rootViewController = viewController
-
-            viewController.beginAppearanceTransition(true, animated: false)
-            viewController.endAppearanceTransition()
-
-            viewController.view.setNeedsLayout()
-            viewController.view.layoutIfNeeded()
-            return window
-        }
-    }
-
+    #if os(iOS)
     func test_rootComponentRendering() async {
         let store = EnvironmentStore(initial: AppState(), logger: TestStoreLogger())
         let rootContainer = RootContainer()
-        let window = await createWindow(with: rootContainer)
+        let window = await PlatformWindow.render(container: rootContainer)
 
         XCTAssertEqual(rootContainer.renderingNumber, 0)
         await fulfill(description: "waiting for first rendering", sleep: 1)
@@ -98,7 +84,7 @@ final class ContainerWithAppStateAsScopeTests: XCTestCase {
     func test_noneScope() async {
         let store = EnvironmentStore(initial: AppState(), logger: TestStoreLogger())
         let noneScopeContainer = NoneScopeContainer()
-        let window = await createWindow(with: noneScopeContainer)
+        let window = await PlatformWindow.render(container: noneScopeContainer)
 
         XCTAssertEqual(noneScopeContainer.renderingNumber, 0)
         await fulfill(description: "waiting for first rendering", sleep: 1)
@@ -110,6 +96,7 @@ final class ContainerWithAppStateAsScopeTests: XCTestCase {
         print(window) // To force a window redraw
         XCTAssertEqual(noneScopeContainer.renderingNumber, 1)
     }
+    #endif
 }
 
 // MARK: - RootContainer

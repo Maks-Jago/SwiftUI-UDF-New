@@ -29,7 +29,7 @@ final class ContainerHookTests: XCTestCase {
         let store = EnvironmentStore(initial: AppState(), logger: TestStoreLogger())
         let rootContainer = RootContainer()
 
-        let window = await UIWindow.render(container: rootContainer)
+        let window = await PlatformWindow.render(container: rootContainer)
 
         XCTAssertEqual(store.state.hookForm.triggerValue, "")
         print(window) // To force a window redraw
@@ -45,7 +45,7 @@ final class ContainerHookTests: XCTestCase {
         let store = EnvironmentStore(initial: AppState(), logger: TestStoreLogger())
         let rootContainer = RootContainer()
 
-        let window = await UIWindow.render(container: rootContainer)
+        let window = await PlatformWindow.render(container: rootContainer)
 
         XCTAssertEqual(store.state.hookForm.triggerValue, "")
         print(window) // To force a window redraw
@@ -76,7 +76,7 @@ final class ContainerHookTests: XCTestCase {
         let store = EnvironmentStore(initial: AppState(), logger: TestStoreLogger())
         let rootContainer = RootContainer()
 
-        let window = await UIWindow.render(container: rootContainer)
+        let window = await PlatformWindow.render(container: rootContainer)
 
         XCTAssertEqual(store.state.hookForm.triggerValue, "")
         print(window) // To force a window redraw
@@ -109,7 +109,7 @@ final class ContainerHookTests: XCTestCase {
 
         // Create and use the first container
         let rootContainer = RootContainer()
-        var window = await UIWindow.render(container: rootContainer)
+        var window = await PlatformWindow.render(container: rootContainer)
 
         XCTAssertEqual(store.state.hookForm.triggerValue, "")
         print(window) // To force a window redraw
@@ -135,7 +135,7 @@ final class ContainerHookTests: XCTestCase {
         XCTAssertEqual(store.state.hookForm.triggerValue, "1", "One-time hook should not fire again")
 
         let newRootContainer = RootContainer()
-        window = await UIWindow.render(container: newRootContainer)
+        window = await PlatformWindow.render(container: newRootContainer)
 
         XCTAssertEqual(store.state.hookForm.triggerValue, "1") // triggerValue from previous step
         print(window) // To force a window redraw

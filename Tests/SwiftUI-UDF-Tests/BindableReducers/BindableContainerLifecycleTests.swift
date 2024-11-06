@@ -31,7 +31,7 @@ final class BindableContainerLifecycleTests: XCTestCase {
 
         let itemId = Item.ID(value: 1)
         let itemsContainer = ItemsContainer(id: itemId)
-        var window: UIWindow? = await UIWindow.render(container: itemsContainer)
+        var window: PlatformWindow? = await PlatformWindow.render(container: itemsContainer)
 
         await fulfill(description: "waiting for rendering", sleep: 1)
         print(window!) // To force a window redraw

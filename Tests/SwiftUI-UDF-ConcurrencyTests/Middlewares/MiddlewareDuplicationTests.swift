@@ -17,7 +17,7 @@ final class MiddlewareDuplicationTests: XCTestCase {
         
         func reduce(_ action: some Action, for state: AppState) {
             switch action {
-            case let action as TestAction:
+            case is TestAction:
                 store.dispatch(
                     Actions.UpdateFormField(
                         keyPath: \TestForm.reduceCallCount,

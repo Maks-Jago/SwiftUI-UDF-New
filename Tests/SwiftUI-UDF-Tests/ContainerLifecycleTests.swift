@@ -32,13 +32,13 @@ final class ContainerLifecycleTests: XCTestCase {
         let store = EnvironmentStore(initial: AppState(), logger: .consoleDebug)
         let rootContainer = RootContainer()
 
-        var window: UIWindow? = await UIWindow.render(container: rootContainer)
+        var window: PlatformWindow? = await PlatformWindow.render(container: rootContainer)
         print(window!) // To force a window redraw
 
         await fulfill(description: "waiting for rendering", sleep: 1)
         XCTAssertTrue(store.state.userData.didLoad)
 
-        window?.rootViewController = nil
+        window?.release()
         window = nil
 
         await fulfill(description: "waiting for rendering", sleep: 1)

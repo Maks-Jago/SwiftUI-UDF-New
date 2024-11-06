@@ -53,7 +53,7 @@ final class ContainerScopeTests: XCTestCase {
         let store = EnvironmentStore(initial: AppState(), logger: TestStoreLogger())
 
         let itemsContainer = ItemsListContainer()
-        let window = await UIWindow.render(container: itemsContainer)
+        let window = await PlatformWindow.render(container: itemsContainer)
 
         store.dispatch(Actions.UpdateFormField(keyPath: \PlainForm.title, value: "title 1"))
         await fulfill(description: "waiting for rendering", sleep: 1)
@@ -67,7 +67,7 @@ final class ContainerScopeTests: XCTestCase {
         let store = EnvironmentStore(initial: AppState(), logger: TestStoreLogger())
 
         let rootContainer = RootContainer()
-        let window = await UIWindow.render(container: rootContainer)
+        let window = await PlatformWindow.render(container: rootContainer)
 
         store.dispatch(Actions.UpdateFormField(keyPath: \PlainForm.title, value: "title 1"))
         await fulfill(description: "waiting for rendering", sleep: 1)

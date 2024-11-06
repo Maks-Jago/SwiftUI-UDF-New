@@ -1,4 +1,4 @@
-//===--- UIWindow+Render.swift --------------------------------------------===//
+//===--- Window+Render.swift --------------------------------------------===//
 //
 // This source file is part of the UDF open source project
 //
@@ -12,6 +12,13 @@
 import Foundation
 import SwiftUI
 
+#if canImport(UIKit)
+public typealias PlatformWindow = UIWindow
+#else
+public typealias PlatformWindow = NSWindow
+#endif
+
+#if canImport(UIKit)
 extension UIWindow {
     /// Asynchronously renders a `Container` into a `UIWindow`.
     ///
@@ -40,4 +47,37 @@ extension UIWindow {
             return window
         }
     }
+
+    func release() {
+        self.rootViewController = nil
+    }
 }
+#endif
+
+#if canImport(AppKit)
+extension NSWindow {
+    public convenience init<Content: View>(controller: NSHostingController<Content>) {
+        self.init()
+        self.contentViewController = controller
+    }
+
+    static func render<C: Container>(container: C) async -> NSWindow {
+        await MainActor.run {
+            let viewController = NSHostingController(rootView: container)
+            let window = NSWindow(controller: viewController)
+
+//            viewController.beginAppearanceTransition(true, animated: false)
+//            viewController.endAppearanceTransition()
+
+            viewController.view.needsLayout = true
+            viewController.view.layoutSubtreeIfNeeded()
+            return window
+        }
+    }
+
+    func release() {
+        self.contentViewController = nil
+    }
+}
+
+#endif
