@@ -140,7 +140,18 @@ public extension Action {
     /// ```swift
     /// let action = MyAction().binded(to: myContainer)
     /// ```
-    func binded<BindedContainer: BindableContainer>(to container: BindedContainer) -> some Action {
-        binded(to: BindedContainer.self, by: container.id)
+    func binded<BindedContainer: BindableContainer>(
+        to container: BindedContainer,
+        fileName: String = #file,
+        functionName: String = #function,
+        lineNumber: Int = #line
+    ) -> some Action {
+        binded(
+            to: BindedContainer.self,
+            by: container.id,
+            fileName: fileName,
+            functionName: functionName,
+            lineNumber: lineNumber
+        )
     }
 }

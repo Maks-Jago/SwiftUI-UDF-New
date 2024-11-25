@@ -20,9 +20,12 @@ public struct DefaultActionFilter: ActionFilter {
     /// Determines whether a given action should be included.
     ///
     /// - Parameter action: The action to be evaluated.
-    /// - Returns: `true` if the action is not marked as `silent`; `false` otherwise.
+    /// - Returns: `false` if the action is marked as `silent` or is of type `_AnyBindableAction`; `true` otherwise.
     public func include(action: LoggingAction) -> Bool {
-        action.internalAction.silent == false
+        switch action.internalAction.value {
+        case _ as any _AnyBindableAction: false
+        default: action.internalAction.silent == false
+        }
     }
 }
 

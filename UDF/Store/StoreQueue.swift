@@ -26,24 +26,24 @@ final class StoreQueue: OperationQueue {
 /// An abstract base class representing an asynchronous operation.
 /// This class manages the operation's execution state and allows subclasses to define
 /// custom asynchronous work.
-open class AsynchronousOperation: Operation {
+class AsynchronousOperation: Operation {
     /// Indicates that the operation is asynchronous.
-    override public var isAsynchronous: Bool {
+    override var isAsynchronous: Bool {
         true
     }
 
     /// Indicates if the operation is currently executing.
-    override public var isExecuting: Bool {
+    override var isExecuting: Bool {
         state == .executing
     }
 
     /// Indicates if the operation has finished executing.
-    override public var isFinished: Bool {
+    override var isFinished: Bool {
         state == .finished
     }
 
     /// Starts the operation and updates the state accordingly.
-    override public func start() {
+    override func start() {
         if self.isCancelled {
             state = .finished
         } else {
@@ -53,7 +53,7 @@ open class AsynchronousOperation: Operation {
     }
 
     /// The main entry point for the operation.
-    override open func main() {
+    override func main() {
         if self.isCancelled {
             state = .finished
         } else {
@@ -62,14 +62,14 @@ open class AsynchronousOperation: Operation {
     }
 
     /// Marks the operation as finished.
-    public func finish() {
+    func finish() {
         state = .finished
     }
 
     // MARK: - State Management
 
     /// An enumeration representing the state of an asynchronous operation.
-    public enum State: String {
+    enum State: String {
         case ready = "Ready"
         case executing = "Executing"
         case finished = "Finished"
@@ -79,7 +79,7 @@ open class AsynchronousOperation: Operation {
     }
 
     /// The current state of the operation. This is a thread-safe property.
-    public var state: State {
+    var state: State {
         get {
             stateQueue.sync {
                 stateStore
