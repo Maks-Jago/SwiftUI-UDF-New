@@ -14,13 +14,11 @@ actor InternalStore<State: AppReducer>: Store {
 
     let subject: PassthroughSubject<(State, State, Animation?), Never> = .init()
 
-    var loggers: [ActionLogger]
     var middlewares: OrderedSet<AnyMiddleware> = []
     private let storeQueue: StoreQueue = .init()
     private let logDistributor: LogDistributor
 
     init(initial state: State, loggers: [ActionLogger]) {
-        self.loggers = loggers
         self.state = state
         self.logDistributor = LogDistributor(loggers: loggers)
     }

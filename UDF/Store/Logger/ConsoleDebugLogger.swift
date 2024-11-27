@@ -43,13 +43,13 @@ public struct ConsoleDebugLogger: ActionLogger {
 
 public extension ActionLogger where Self == ConsoleDebugLogger {
     /// Returns a `ConsoleDebugLogger` that logs actions using the default filter.
-    static var consoleDebug: ActionLogger { ConsoleDebugLogger(filters: [.default]) }
+    static var consoleDebug: ActionLogger { ConsoleDebugLogger(filters: [.default, .debugOnly]) }
 
     /// Returns a `ConsoleDebugLogger` that logs all actions verbosely.
-    static var consoleDebugVerbose: ActionLogger { ConsoleDebugLogger(filters: [.verbose]) }
+    static var consoleDebugVerbose: ActionLogger { ConsoleDebugLogger(filters: [.verbose, .debugOnly]) }
 
     /// Returns a `ConsoleDebugLogger` that logs only error actions.
-    static var consoleDebugOnlyErrors: ActionLogger { ConsoleDebugLogger(filters: [.errorOnly]) }
+    static var consoleDebugOnlyErrors: ActionLogger { ConsoleDebugLogger(filters: [.errorOnly, .debugOnly]) }
 
     /// Creates a `ConsoleDebugLogger` with additional custom filters.
     ///
