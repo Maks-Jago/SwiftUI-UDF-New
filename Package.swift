@@ -22,6 +22,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/apple/swift-collections", from: "1.1.4"),
         .package(url: "https://github.com/urlaunched-com/Runtime", from: "2.2.6"),
+//        .package(url: "https://github.com/groue/Semaphore", from: "0.1.0"),
     ],
     targets: [
         .target(
@@ -29,6 +30,7 @@ let package = Package(
             dependencies: [
                 .product(name: "OrderedCollections", package: "swift-collections"),
                 .product(name: "Runtime", package: "Runtime"),
+//                .product(name: "Semaphore", package: "Semaphore"),
             ],
             path: "UDF"
         ),

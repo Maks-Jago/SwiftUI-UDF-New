@@ -1,10 +1,12 @@
 
 import Foundation
+//import Semaphore
 
 public final class XCTestGroup {
     private static var shared = XCTestGroup()
     private lazy var group = DispatchGroup()
     private lazy var groupQueue = DispatchQueue(label: "XCTestGroup")
+//    static let semaphore = AsyncSemaphore(value: 0)
 
     public static func enter(
         fileName: String = #file,
@@ -12,6 +14,7 @@ public final class XCTestGroup {
         lineNumber: Int = #line
     ) {
         if ProcessInfo.processInfo.xcTest {
+//            semaphore.signal()
             shared.groupQueue.sync {
                 shared.group.enter()
             }
