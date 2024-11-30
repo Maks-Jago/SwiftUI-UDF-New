@@ -28,7 +28,7 @@ actor InternalStore<State: AppReducer>: Store {
     }
 
     nonisolated func dispatch(_ action: some Action, priority: ActionPriority, fileName: String, functionName: String, lineNumber: Int) {
-        XCTestGroup.enter()
+        XCTestGroup.shared.enter()
         let internalActions = prepareActionsToReduce(action, fileName: fileName, functionName: functionName, lineNumber: lineNumber)
         
         for internalAction in internalActions {
@@ -39,7 +39,6 @@ actor InternalStore<State: AppReducer>: Store {
             if let delay = internalAction.delay {
                 let delayedOperation = DelayedOperation(delay: delay, priority: .init(priority))
                 storeOperation.addDependency(delayedOperation)
-//                storeQueue.addOperation(delayedOperation)
                 storeQueue.addOperations([delayedOperation, storeOperation], waitUntilFinished: false)
             } else {
                 storeQueue.addOperation(storeOperation)
