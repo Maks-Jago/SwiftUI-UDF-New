@@ -9,7 +9,7 @@ struct InternalAction: @unchecked Sendable, Action {
 
     var animation: Animation?
     var silent: Bool
-    var delay: TimeInterval?
+    var delay: Delay?
 
     private let actionDescription: String
 
@@ -17,7 +17,7 @@ struct InternalAction: @unchecked Sendable, Action {
         _ value: some Action,
         animation: Animation? = nil,
         silent: Bool = false,
-        delay: TimeInterval? = nil,
+        delay: Delay? = nil,
         fileName: String = #file,
         functionName: String = #function,
         lineNumber: Int = #line

@@ -43,7 +43,6 @@ actor InternalStore<State: AppReducer>: Store {
             } else {
                 storeQueue.addOperation(storeOperation)
             }
-
         }
     }
 

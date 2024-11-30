@@ -166,14 +166,14 @@ public extension Action {
         if let group = self as? ActionGroup {
             ActionGroup(internalActions: group._actions.map { oldAction in
                 var mutableCopy = oldAction
-                mutableCopy.delay = delay
+                mutableCopy.delay = Delay(delay)
                 return mutableCopy
             })
         } else {
             ActionGroup(internalActions: [
                 InternalAction(
                     self,
-                    delay: delay,
+                    delay: Delay(delay),
                     fileName: fileName,
                     functionName: functionName,
                     lineNumber: lineNumber

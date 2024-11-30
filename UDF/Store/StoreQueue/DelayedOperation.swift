@@ -13,10 +13,10 @@ import Foundation
 
 final class DelayedOperation: AsynchronousOperation {
     var priority: StoreOperation.Priority
-    private let delay: TimeInterval
+    private let delay: Delay
     var task: Task<Void, Never>? = nil
 
-    init(delay: TimeInterval, priority: StoreOperation.Priority) {
+    init(delay: Delay, priority: StoreOperation.Priority) {
         self.delay = delay
         self.priority = priority
         super.init()
@@ -24,8 +24,8 @@ final class DelayedOperation: AsynchronousOperation {
 
     override func main() {
         self.task = Task.detached(priority: priority.taskPriority) { [weak self] in
-            let delay = self?.delay ?? 0
-            try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+            let delay = self?.delay ?? Delay(0)
+            try? await Task.sleep(nanoseconds: UInt64(delay.delayTime * 1_000_000_000))
             self?.finish()
         }
     }
