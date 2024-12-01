@@ -706,6 +706,15 @@ public extension Actions {
     struct NavigateBack: Action {
         public init() {}
     }
+    
+    /// `NavigateBack` is an action used to handle navigation back a specified number of steps.
+    struct NavigateStepsBack: Action {
+        public let stepsCount: Int
+        
+        public init(stepsCount: Int) {
+            self.stepsCount = stepsCount
+        }
+    }
 }
 
 // MARK: - Global Navigation Typed
@@ -766,6 +775,15 @@ public extension Actions {
     /// `NavigateBackTyped` is a generic action used to handle navigation back to the previous screen for a specific `Routing`.
     struct NavigateBackTyped<Routing>: Action {
         public init() {}
+    }
+    
+    /// `NavigateStepsBackTyped` is a generic action used to handle navigation back a specified number of steps.
+    struct NavigateStepsBackTyped<Routing>: Action {
+        public let stepsCount: Int
+        
+        public init(stepsCount: Int) {
+            self.stepsCount = stepsCount
+        }
     }
 }
 
