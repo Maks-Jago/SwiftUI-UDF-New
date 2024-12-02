@@ -13,15 +13,15 @@ import Foundation
 
 final class AnyMiddleware: Hashable {
     let middleware: any Middleware
-    
+
     init(_ middleware: any Middleware) {
         self.middleware = middleware
     }
-    
+
     static func == (lhs: AnyMiddleware, rhs: AnyMiddleware) -> Bool {
         ObjectIdentifier(lhs) == ObjectIdentifier(rhs)
     }
-    
+
     func hash(into hasher: inout Hasher) {
         hasher.combine(ObjectIdentifier(self))
     }

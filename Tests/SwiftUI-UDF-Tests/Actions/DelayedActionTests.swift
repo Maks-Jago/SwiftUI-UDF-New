@@ -1,7 +1,7 @@
 
 @testable import UDF
-import XCTest
 import UDFXCTest
+import XCTest
 
 final class DelayedActionTests: XCTestCase {
     private struct TestStoreLogger: ActionLogger {

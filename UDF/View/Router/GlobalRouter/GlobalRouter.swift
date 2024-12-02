@@ -80,7 +80,9 @@ public final class GlobalRouter {
         }
 
         guard registeredRoute != nil else {
-            fatalError("Routing: \(R.self) is not attached to the view hierarchy. Use `navigationDestination(for: MyRouting.self)` to add routing")
+            fatalError(
+                "Routing: \(R.self) is not attached to the view hierarchy. Use `navigationDestination(for: MyRouting.self)` to add routing"
+            )
         }
 
         routers.reap()

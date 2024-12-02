@@ -30,7 +30,7 @@ actor InternalStore<State: AppReducer>: Store {
     nonisolated func dispatch(_ action: some Action, priority: ActionPriority, fileName: String, functionName: String, lineNumber: Int) {
         XCTestGroup.shared.enter()
         let internalActions = prepareActionsToReduce(action, fileName: fileName, functionName: functionName, lineNumber: lineNumber)
-        
+
         for internalAction in internalActions {
             let storeOperation = StoreOperation(priority: .init(priority)) { [weak self] in
                 await self?.reduce(internalAction)
@@ -106,7 +106,12 @@ private extension InternalStore {
         return (oldState, newState, mutated)
     }
 
-    nonisolated func prepareActionsToReduce(_ action: some Action, fileName: String, functionName: String, lineNumber: Int) -> [InternalAction] {
+    nonisolated func prepareActionsToReduce(
+        _ action: some Action,
+        fileName: String,
+        functionName: String,
+        lineNumber: Int
+    ) -> [InternalAction] {
         let internalAction: InternalAction = {
             if let internalAction = action as? InternalAction {
                 return internalAction
@@ -124,7 +129,12 @@ private extension InternalStore {
         let filteredActions = internalAction.unwrapActions(isIncluded: { $0.delay == nil })
 
         if !filteredActions.isEmpty {
-            return [InternalAction(ActionGroup(internalActions: filteredActions), fileName: fileName, functionName: functionName, lineNumber: lineNumber)] + delayedActions
+            return [InternalAction(
+                ActionGroup(internalActions: filteredActions),
+                fileName: fileName,
+                functionName: functionName,
+                lineNumber: lineNumber
+            )] + delayedActions
         }
 
         return delayedActions

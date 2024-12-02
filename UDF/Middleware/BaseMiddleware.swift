@@ -434,8 +434,8 @@ open class BaseMiddleware<State: AppReducer>: Middleware {
     /// - Removes the task from the `cancellations` dictionary when it is completed.
     ///
     /// - Note: This method uses the Swift `Task` API to run the asynchronous task.
-    open func execute<E: ConcurrencyEffect>(
-        effect: E,
+    open func execute(
+        effect: some ConcurrencyEffect,
         flowId: AnyHashable,
         cancellation: some Hashable,
         mapAction: @escaping (any Action) -> any Action = { $0 },
@@ -445,7 +445,7 @@ open class BaseMiddleware<State: AppReducer>: Middleware {
         lineNumber: Int = #line
     ) {
         let anyCancellationId = AnyHashable(cancellation)
-        
+
         // Prevent running the effect if an effect with the same cancellation ID is already in progress
         guard cancellations[anyCancellationId] == nil else {
             return
@@ -460,7 +460,7 @@ open class BaseMiddleware<State: AppReducer>: Middleware {
             do {
                 // Execute the effect's task, passing flowId
                 let action = try await effect.task(flowId: flowId)
-                
+
                 // Check if the task was cancelled and dispatch appropriate actions
                 if Task.isCancelled {
                     self?.dispatch(action: Actions.DidCancelEffect(by: cancellation), filePosition: filePosition)

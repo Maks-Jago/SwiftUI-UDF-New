@@ -58,12 +58,12 @@ public protocol ConcurrencyEffect {
 struct ConcurrencyBlockEffect: ConcurrencyEffect, FileFunctionLine {
     /// The asynchronous block to be executed, producing an action.
     let block: (AnyHashable) async throws -> any Action
-    
+
     // Metadata for debugging: file name, function name, and line number.
     var fileName: String
     var functionName: String
     var lineNumber: Int
-    
+
     /// Executes the asynchronous block with the provided `flowId`.
     ///
     /// - Parameter flowId: The unique identifier for the flow.

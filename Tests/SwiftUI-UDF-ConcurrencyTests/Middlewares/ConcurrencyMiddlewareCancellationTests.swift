@@ -114,11 +114,11 @@ private extension ConcurrencyMiddlewareCancellationTests {
         struct SomeEffect: ConcurrencyEffect {
             func task(flowId: AnyHashable) async throws -> any UDF.Action {
                 try await Task.sleep(seconds: 1)
-                
+
                 try Task.checkCancellation()
-                
+
                 return Actions.Message(message: "Success message", id: flowId)
             }
         }
     }
-} 
+}

@@ -46,9 +46,9 @@ import SwiftUI
 public struct AlertTextField: AlertAction {
     public var title: String
     public var text: Binding<String>
-#if os(iOS)
-    public var textInputAutocapitalization: TextInputAutocapitalization? = nil
-#endif
+    #if os(iOS)
+        public var textInputAutocapitalization: TextInputAutocapitalization?
+    #endif
     public var submitLabel: SubmitLabel = .done
 
     @StateObject private var debouncer: UserInputDebouncer<String>
@@ -75,9 +75,9 @@ public struct AlertTextField: AlertAction {
     /// The view body of the `AlertTextField`.
     public var body: some View {
         TextField(title, text: $debouncer.value)
-#if os(iOS)
+        #if os(iOS)
             .textInputAutocapitalization(textInputAutocapitalization)
-#endif
+        #endif
             .submitLabel(submitLabel)
             .onReceive(debouncer.$debouncedValue.dropFirst()) { value in
                 self.text.wrappedValue = value
@@ -98,13 +98,13 @@ public extension AlertTextField {
     ///
     /// - Parameter textInputAutocapitalization: The autocapitalization behavior for the text input.
     /// - Returns: A modified `AlertTextField` with the specified autocapitalization.
-#if os(iOS)
-    func textInputAutocapitalization(_ textInputAutocapitalization: TextInputAutocapitalization?) -> AlertTextField {
-        mutate { field in
-            field.textInputAutocapitalization = textInputAutocapitalization
+    #if os(iOS)
+        func textInputAutocapitalization(_ textInputAutocapitalization: TextInputAutocapitalization?) -> AlertTextField {
+            mutate { field in
+                field.textInputAutocapitalization = textInputAutocapitalization
+            }
         }
-    }
-#endif
+    #endif
 
     /// Sets the submit label for the text field's return key and returns a new `AlertTextField`.
     ///
