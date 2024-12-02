@@ -137,7 +137,11 @@ struct ConnectedContainer<C: Component, State: AppReducer>: View {
                 },
                 didUnloadCommand: { store in
                     onContainerDidUnload(store)
-                    store.dispatch(Actions._OnContainerDidUnLoad(containerType: containerType, id: containerId()).silent())
+                    store.dispatch(
+                        Actions._OnContainerDidUnLoad(containerType: containerType, id: containerId())
+                            .with(delay: 0.15)
+                            .silent()
+                    )
                 },
                 useHooks: useHooks
             )

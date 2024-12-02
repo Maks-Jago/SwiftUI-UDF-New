@@ -134,7 +134,7 @@ open class BaseMiddleware<State: AppReducer>: Middleware {
         let filePosition = fileFunctionLine(effect, fileName: fileName, functionName: functionName, lineNumber: lineNumber)
 
         // Registering for XCTest to wait for asynchronous code in tests
-        XCTestGroup.enter()
+        XCTestGroup.shared.enter()
 
         // Subscribe to the effect and store the cancellation token
         cancellations[anyId] = effect
@@ -150,12 +150,12 @@ open class BaseMiddleware<State: AppReducer>: Middleware {
                     lineNumber: filePosition.lineNumber
                 )
                 // Signal XCTest that this task has been cancelled
-                XCTestGroup.leave()
+                XCTestGroup.shared.leave()
             })
             .sink(receiveCompletion: { [weak self] _ in
                 // Handle completion: Remove the task from cancellations and signal XCTest
                 self?.cancellations[anyId] = nil
-                XCTestGroup.leave()
+                XCTestGroup.shared.leave()
             }, receiveValue: { [weak self] action in
                 // Handle receiving a value: Dispatch the action to the store
                 if self?.cancellations[anyId] != nil {
@@ -408,7 +408,7 @@ open class BaseMiddleware<State: AppReducer>: Middleware {
                 functionName: filePosition.functionName,
                 lineNumber: filePosition.lineNumber
             )
-            XCTestGroup.leave()
+            XCTestGroup.shared.leave()
         }
     }
 
@@ -455,7 +455,7 @@ open class BaseMiddleware<State: AppReducer>: Middleware {
         let filePosition = fileFunctionLine(effect, fileName: fileName, functionName: functionName, lineNumber: lineNumber)
 
         // Start the task and store the cancellation token
-        XCTestGroup.enter()
+        XCTestGroup.shared.enter()
         let task = Task { [weak self] in
             do {
                 // Execute the effect's task, passing flowId

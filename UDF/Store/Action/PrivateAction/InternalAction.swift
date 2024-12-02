@@ -9,6 +9,7 @@ struct InternalAction: @unchecked Sendable, Action {
 
     var animation: Animation?
     var silent: Bool
+    var delay: Delay?
 
     private let actionDescription: String
 
@@ -16,6 +17,7 @@ struct InternalAction: @unchecked Sendable, Action {
         _ value: some Action,
         animation: Animation? = nil,
         silent: Bool = false,
+        delay: Delay? = nil,
         fileName: String = #file,
         functionName: String = #function,
         lineNumber: Int = #line
@@ -26,6 +28,7 @@ struct InternalAction: @unchecked Sendable, Action {
         self.functionName = functionName
         self.lineNumber = lineNumber
         self.silent = silent
+        self.delay = delay
 
         let fileURL = NSURL(fileURLWithPath: fileName).lastPathComponent ?? "Unknown file"
         if let animation {
@@ -53,7 +56,7 @@ extension InternalAction: CustomDebugStringConvertible {
 
 // MARK: - ActionGroup
 extension InternalAction {
-    func unwrapActions() -> [InternalAction] {
+    func unwrapActions(isIncluded: ((_ action: InternalAction) -> Bool) = { _ in true }) -> [InternalAction] {
         func actions(from internalAction: InternalAction) -> [InternalAction] {
             var actions: [InternalAction] = []
             switch self.value {
@@ -80,6 +83,10 @@ extension InternalAction {
             return actions
         }
 
-        return actions(from: self)
+        return actions(from: self).filter(isIncluded)
+    }
+
+    func findDelayedActions() -> [InternalAction] {
+        self.unwrapActions().filter { $0.delay != nil }
     }
 }

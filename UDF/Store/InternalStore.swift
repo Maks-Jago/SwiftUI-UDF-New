@@ -28,26 +28,22 @@ actor InternalStore<State: AppReducer>: Store {
     }
 
     nonisolated func dispatch(_ action: some Action, priority: ActionPriority, fileName: String, functionName: String, lineNumber: Int) {
-        XCTestGroup.enter()
-        let internalAction: InternalAction = {
-            if let internalAction = action as? InternalAction {
-                return internalAction
-            }
-
-            return InternalAction(
-                action,
-                fileName: fileName,
-                functionName: functionName,
-                lineNumber: lineNumber
-            )
-        }()
-
-        storeQueue.addOperation(
-            StoreOperation(priority: .init(priority)) { [weak self] in
+        XCTestGroup.shared.enter()
+        let internalActions = prepareActionsToReduce(action, fileName: fileName, functionName: functionName, lineNumber: lineNumber)
+        
+        for internalAction in internalActions {
+            let storeOperation = StoreOperation(priority: .init(priority)) { [weak self] in
                 await self?.reduce(internalAction)
-                XCTestGroup.leave()
             }
-        )
+
+            if let delay = internalAction.delay {
+                let delayedOperation = DelayedOperation(delay: delay, priority: .init(priority))
+                storeOperation.addDependency(delayedOperation)
+                storeQueue.addOperations([delayedOperation, storeOperation], waitUntilFinished: false)
+            } else {
+                storeQueue.addOperation(storeOperation)
+            }
+        }
     }
 
     func subscribe(_ middleware: some Middleware<State>) async {
@@ -108,6 +104,30 @@ private extension InternalStore {
         }
 
         return (oldState, newState, mutated)
+    }
+
+    nonisolated func prepareActionsToReduce(_ action: some Action, fileName: String, functionName: String, lineNumber: Int) -> [InternalAction] {
+        let internalAction: InternalAction = {
+            if let internalAction = action as? InternalAction {
+                return internalAction
+            }
+
+            return InternalAction(
+                action,
+                fileName: fileName,
+                functionName: functionName,
+                lineNumber: lineNumber
+            )
+        }()
+
+        let delayedActions = internalAction.findDelayedActions()
+        let filteredActions = internalAction.unwrapActions(isIncluded: { $0.delay == nil })
+
+        if !filteredActions.isEmpty {
+            return [InternalAction(ActionGroup(internalActions: filteredActions), fileName: fileName, functionName: functionName, lineNumber: lineNumber)] + delayedActions
+        }
+
+        return delayedActions
     }
 }
 

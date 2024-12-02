@@ -155,3 +155,30 @@ public extension Action {
         )
     }
 }
+
+public extension Action {
+    func with(
+        delay: TimeInterval,
+        fileName: String = #file,
+        functionName: String = #function,
+        lineNumber: Int = #line
+    ) -> some Action {
+        if let group = self as? ActionGroup {
+            ActionGroup(internalActions: group._actions.map { oldAction in
+                var mutableCopy = oldAction
+                mutableCopy.delay = Delay(delay)
+                return mutableCopy
+            })
+        } else {
+            ActionGroup(internalActions: [
+                InternalAction(
+                    self,
+                    delay: Delay(delay),
+                    fileName: fileName,
+                    functionName: functionName,
+                    lineNumber: lineNumber
+                ),
+            ])
+        }
+    }
+}

@@ -60,16 +60,8 @@ public final class XCTestStore<State: AppReducer> {
         await store.dispatch(InternalAction(action, fileName: fileName, functionName: functionName, lineNumber: lineNumber))
     }
 
-    public func wait(
-        fileName: String = #file,
-        functionName: String = #function,
-        lineNumber: Int = #line
-    ) {
-        XCTestGroup.wait(
-            fileName: fileName,
-            functionName: functionName,
-            lineNumber: lineNumber
-        )
+    public func wait() {
+        XCTestGroup.shared.wait()
     }
 }
 
