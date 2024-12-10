@@ -19,3 +19,19 @@ import Foundation
 public func useStore<State: AppReducer>(_ stateType: State.Type, _ useBlock: @escaping (_ store: EnvironmentStore<State>) -> Void) {
     useBlock(EnvironmentStore<State>.global)
 }
+
+/// Executes an asynchronous block in a synchronous manner by blocking the executing thread using a semaphore.
+///
+/// This function allows you to run asynchronous code in a synchronous context,
+/// such as when you need to bridge between asynchronous and synchronous APIs.
+///
+/// - Parameters:
+///   - block: An async block to execute.
+func executeSynchronously(_ block: @escaping () async -> Void) {
+    let semaphore = DispatchSemaphore(value: 0)
+    Task.detached(priority: .userInitiated) {
+        await block()
+        semaphore.signal()
+    }
+    semaphore.wait()
+}
