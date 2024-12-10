@@ -355,11 +355,6 @@ public extension EnvironmentStore {
     /// Subscribes to middleware using a custom builder.
     ///
     /// - Parameter build: A closure that takes the store and returns an array of middleware wrappers.
-    @available(
-        *,
-        deprecated,
-        message: "`subscribeAsync` func is deprecated and will be removed in future updates. Use `subscribe` method instead"
-    )
     @MainActor
     func subscribe(@MiddlewareBuilder<State> build: @escaping (_ store: any Store<State>) -> [MiddlewareWrapper<State>]) async {
         executeSynchronously {
