@@ -194,7 +194,6 @@ public extension EnvironmentStore {
     /// - Parameter middlewareType: The middleware type to subscribe to. Must conform to `Middleware` and `EnvironmentMiddleware`.
     /// - Note: This method is designed to work asynchronously and is intended for environments where middleware needs to interact
     ///   with the state in an isolated, asynchronous manner.
-    @MainActor
     func subscribe<M: Middleware<State>>(_ middlewareType: M.Type) where M.State == State, M: EnvironmentMiddleware {
         executeSynchronously {
             if ProcessInfo.processInfo.xcTest {
@@ -214,7 +213,6 @@ public extension EnvironmentStore {
     /// - Parameters:
     ///   - middlewareType: The middleware type to subscribe to. Must conform to `Middleware` and `EnvironmentMiddleware`.
     ///   - environment: The environment to be used by the middleware.
-    @MainActor
     func subscribe<M: Middleware<State>>(_ middlewareType: M.Type, environment: M.Environment) where M.State == State,
         M: EnvironmentMiddleware
     {
@@ -230,7 +228,6 @@ public extension EnvironmentStore {
     /// - Parameters:
     ///   - middlewareType: The middleware type to subscribe to. Must conform to `Middleware` and `EnvironmentMiddleware`.
     ///   - queue: The dispatch queue on which the middleware operates.
-    @MainActor
     func subscribe<M: Middleware<State>>(_ middlewareType: M.Type, on queue: DispatchQueue) where M.State == State,
         M: EnvironmentMiddleware
     {
@@ -251,7 +248,6 @@ public extension EnvironmentStore {
     ///
     /// - Parameters:
     ///   - middlewareType: The middleware type to subscribe to.
-    @MainActor
     func subscribe<M: Middleware<State>>(_ middlewareType: M.Type) where M.State == State {
         executeSynchronously {
             await self.subscribe { store in
@@ -265,7 +261,6 @@ public extension EnvironmentStore {
     /// - Parameters:
     ///   - middlewareType: The middleware type to subscribe to.
     ///   - queue: The dispatch queue on which the middleware operates.
-    @MainActor
     func subscribe<M: Middleware<State>>(_ middlewareType: M.Type, on queue: DispatchQueue) where M.State == State {
         executeSynchronously {
             await self.subscribe { store in
@@ -280,7 +275,6 @@ public extension EnvironmentStore {
     ///   - middlewareType: The middleware type to subscribe to. Must conform to `Middleware` and `EnvironmentMiddleware`.
     ///   - environment: The environment to use for the middleware.
     ///   - queue: The dispatch queue on which the middleware operates.
-    @MainActor
     func subscribe<M: Middleware<State>>(_ middlewareType: M.Type, environment: M.Environment, on queue: DispatchQueue)
         where M.State == State, M: EnvironmentMiddleware
     {
@@ -302,7 +296,6 @@ public extension EnvironmentStore {
         deprecated,
         message: "`subscribeAsync` func is deprecated and will be removed in future updates. Use `subscribe` method instead"
     )
-    @MainActor
     func subscribeAsync<M>(_ middlewareType: M.Type, on queue: DispatchQueue, onSubscribe: @escaping () -> Void = {}) where M: Middleware,
         State == M.State
     {
@@ -322,7 +315,6 @@ public extension EnvironmentStore {
         deprecated,
         message: "`subscribeAsync` func is deprecated and will be removed in future updates. Use `subscribe` method instead"
     )
-    @MainActor
     func subscribeAsync<M>(
         _ middlewareType: M.Type,
         environment: M.Environment,
@@ -341,7 +333,6 @@ public extension EnvironmentStore {
         deprecated,
         message: "`subscribeAsync` func is deprecated and will be removed in future updates. Use `subscribe` method instead"
     )
-    @MainActor
     func subscribeAsync(@MiddlewareBuilder<State> build: @escaping (_ store: any Store<State>) -> [MiddlewareWrapper<State>]) {
         executeSynchronously {
             await self.store.subscribe(
@@ -355,7 +346,6 @@ public extension EnvironmentStore {
     /// Subscribes to middleware using a custom builder.
     ///
     /// - Parameter build: A closure that takes the store and returns an array of middleware wrappers.
-    @MainActor
     func subscribe(@MiddlewareBuilder<State> build: @escaping (_ store: any Store<State>) -> [MiddlewareWrapper<State>]) async {
         executeSynchronously {
             await self.store.subscribe(
