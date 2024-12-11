@@ -33,5 +33,5 @@ func executeSynchronously(_ block: @escaping () async -> Void) {
         await block()
         semaphore.signal()
     }
-    semaphore.wait()
+    _ = semaphore.wait(timeout: .now() + 0.2)
 }
