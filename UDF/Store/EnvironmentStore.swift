@@ -212,7 +212,7 @@ public extension EnvironmentStore {
     ///   - middlewareType: The middleware type to subscribe to. Must conform to `Middleware` and `EnvironmentMiddleware`.
     ///   - environment: The environment to be used by the middleware.
     func subscribe<M: Middleware<State>>(_ middlewareType: M.Type, environment: M.Environment) where M.State == State,
-                                                                                                     M: EnvironmentMiddleware
+        M: EnvironmentMiddleware
     {
         self.subscribe { store in
             middlewareType.init(store: store, environment: environment)
@@ -225,7 +225,7 @@ public extension EnvironmentStore {
     ///   - middlewareType: The middleware type to subscribe to. Must conform to `Middleware` and `EnvironmentMiddleware`.
     ///   - queue: The dispatch queue on which the middleware operates.
     func subscribe<M: Middleware<State>>(_ middlewareType: M.Type, on queue: DispatchQueue) where M.State == State,
-                                                                                                  M: EnvironmentMiddleware
+        M: EnvironmentMiddleware
     {
         if ProcessInfo.processInfo.xcTest {
             self.subscribe { store in
