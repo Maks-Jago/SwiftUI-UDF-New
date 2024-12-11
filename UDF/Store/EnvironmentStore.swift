@@ -195,15 +195,13 @@ public extension EnvironmentStore {
     /// - Note: This method is designed to work asynchronously and is intended for environments where middleware needs to interact
     ///   with the state in an isolated, asynchronous manner.
     func subscribe<M: Middleware<State>>(_ middlewareType: M.Type) where M.State == State, M: EnvironmentMiddleware {
-        executeSynchronously {
-            if ProcessInfo.processInfo.xcTest {
-                await self.subscribe { store in
-                    middlewareType.init(store: store, environment: M.buildTestEnvironment(for: store))
-                }
-            } else {
-                await self.subscribe { store in
-                    middlewareType.init(store: store, environment: M.buildLiveEnvironment(for: store))
-                }
+        if ProcessInfo.processInfo.xcTest {
+            self.subscribe { store in
+                middlewareType.init(store: store, environment: M.buildTestEnvironment(for: store))
+            }
+        } else {
+            self.subscribe { store in
+                middlewareType.init(store: store, environment: M.buildLiveEnvironment(for: store))
             }
         }
     }
@@ -214,12 +212,10 @@ public extension EnvironmentStore {
     ///   - middlewareType: The middleware type to subscribe to. Must conform to `Middleware` and `EnvironmentMiddleware`.
     ///   - environment: The environment to be used by the middleware.
     func subscribe<M: Middleware<State>>(_ middlewareType: M.Type, environment: M.Environment) where M.State == State,
-        M: EnvironmentMiddleware
+                                                                                                     M: EnvironmentMiddleware
     {
-        executeSynchronously {
-            await self.subscribe { store in
-                middlewareType.init(store: store, environment: environment)
-            }
+        self.subscribe { store in
+            middlewareType.init(store: store, environment: environment)
         }
     }
 
@@ -229,17 +225,15 @@ public extension EnvironmentStore {
     ///   - middlewareType: The middleware type to subscribe to. Must conform to `Middleware` and `EnvironmentMiddleware`.
     ///   - queue: The dispatch queue on which the middleware operates.
     func subscribe<M: Middleware<State>>(_ middlewareType: M.Type, on queue: DispatchQueue) where M.State == State,
-        M: EnvironmentMiddleware
+                                                                                                  M: EnvironmentMiddleware
     {
-        executeSynchronously {
-            if ProcessInfo.processInfo.xcTest {
-                await self.subscribe { store in
-                    middlewareType.init(store: store, environment: M.buildTestEnvironment(for: store), queue: queue)
-                }
-            } else {
-                await self.subscribe { store in
-                    middlewareType.init(store: store, environment: M.buildLiveEnvironment(for: store), queue: queue)
-                }
+        if ProcessInfo.processInfo.xcTest {
+            self.subscribe { store in
+                middlewareType.init(store: store, environment: M.buildTestEnvironment(for: store), queue: queue)
+            }
+        } else {
+            self.subscribe { store in
+                middlewareType.init(store: store, environment: M.buildLiveEnvironment(for: store), queue: queue)
             }
         }
     }
@@ -249,10 +243,8 @@ public extension EnvironmentStore {
     /// - Parameters:
     ///   - middlewareType: The middleware type to subscribe to.
     func subscribe<M: Middleware<State>>(_ middlewareType: M.Type) where M.State == State {
-        executeSynchronously {
-            await self.subscribe { store in
-                middlewareType.init(store: store)
-            }
+        self.subscribe { store in
+            middlewareType.init(store: store)
         }
     }
 
@@ -262,10 +254,8 @@ public extension EnvironmentStore {
     ///   - middlewareType: The middleware type to subscribe to.
     ///   - queue: The dispatch queue on which the middleware operates.
     func subscribe<M: Middleware<State>>(_ middlewareType: M.Type, on queue: DispatchQueue) where M.State == State {
-        executeSynchronously {
-            await self.subscribe { store in
-                middlewareType.init(store: store, queue: queue)
-            }
+        self.subscribe { store in
+            middlewareType.init(store: store, queue: queue)
         }
     }
 
@@ -278,10 +268,8 @@ public extension EnvironmentStore {
     func subscribe<M: Middleware<State>>(_ middlewareType: M.Type, environment: M.Environment, on queue: DispatchQueue)
         where M.State == State, M: EnvironmentMiddleware
     {
-        executeSynchronously {
-            await self.subscribe { store in
-                middlewareType.init(store: store, environment: environment, queue: queue)
-            }
+        self.subscribe { store in
+            middlewareType.init(store: store, environment: environment, queue: queue)
         }
     }
 
@@ -346,7 +334,7 @@ public extension EnvironmentStore {
     /// Subscribes to middleware using a custom builder.
     ///
     /// - Parameter build: A closure that takes the store and returns an array of middleware wrappers.
-    func subscribe(@MiddlewareBuilder<State> build: @escaping (_ store: any Store<State>) -> [MiddlewareWrapper<State>]) async {
+    func subscribe(@MiddlewareBuilder<State> build: @escaping (_ store: any Store<State>) -> [MiddlewareWrapper<State>]) {
         executeSynchronously {
             await self.store.subscribe(
                 build(self.store).map { wrapper in
