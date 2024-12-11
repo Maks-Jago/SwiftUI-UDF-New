@@ -55,8 +55,8 @@ final class ContainerLifecycle<State: AppReducer>: ObservableObject {
     ///   - store: The global `EnvironmentStore` holding the state.
     func set(didLoad: Bool, store: EnvironmentStore<State>) {
         if !self.didLoad, didLoad {
-            didLoadCommand(store)
             containerHooks.createHooks()
+            didLoadCommand(store)
         }
         self.didLoad = didLoad
     }

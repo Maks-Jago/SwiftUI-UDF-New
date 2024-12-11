@@ -66,9 +66,6 @@ import SwiftUI
                 let viewController = NSHostingController(rootView: container)
                 let window = NSWindow(controller: viewController)
 
-//            viewController.beginAppearanceTransition(true, animated: false)
-//            viewController.endAppearanceTransition()
-
                 viewController.view.needsLayout = true
                 viewController.view.layoutSubtreeIfNeeded()
                 return window
