@@ -1,23 +1,31 @@
+//===--- OrderedDictionaryExtensions.swift -----------------------------------===//
+//
+// This source file is part of the UDF open source project
+//
+// Copyright (c) 2024 You are launched
+// Licensed under Apache License v2.0
+//
+// See https://opensource.org/licenses/Apache-2.0 for license information
+//
+//===----------------------------------------------------------------------===//
 
 import Foundation
 import OrderedCollections
 
 public extension OrderedDictionary where Value: Mergeable {
-
     subscript(key: Key) -> Value {
         get {
             preconditionFailure("You have to use optional subscript")
         }
         set {
-            self[key] = self[key]?.merging(newValue) ?? newValue
+            self.updateValue(self[key]?.merging(newValue) ?? newValue, forKey: key)
         }
     }
 }
 
 public extension OrderedDictionary where Value: Identifiable, Key == Value.ID {
-
     mutating func insert(items: [Value]) {
-        items.forEach { item in
+        for item in items {
             self[item.id] = item
         }
     }
@@ -27,11 +35,10 @@ public extension OrderedDictionary where Value: Identifiable, Key == Value.ID {
     }
 }
 
-public typealias OMI = Mergeable & Identifiable
+public typealias OMI = Identifiable & Mergeable
 public extension OrderedDictionary where Value: MI, Key == Value.ID {
-
     mutating func insert(items: [Value]) {
-        items.forEach { item in
+        for item in items {
             self[item.id] = self[item.id]?.merging(item) ?? item
         }
     }

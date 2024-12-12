@@ -5,12 +5,11 @@
 //  Created by Max Kuznetsov on 07.11.2022.
 //
 
-import XCTest
 import SwiftUI
 @testable import UDF
+import XCTest
 
 final class ContainerScopeTests: XCTestCase {
-
     @propertyWrapper
     final class Box<Value> {
         private var box: Value
@@ -31,7 +30,9 @@ final class ContainerScopeTests: XCTestCase {
 
         func log(_ action: LoggingAction, description: String) {
             print("Reduce\t\t", description)
-            print("---------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
+            print(
+                "---------------------------------------------------------------------------------------------------------------------------------------------------------------------------"
+            )
         }
     }
 
@@ -50,24 +51,13 @@ final class ContainerScopeTests: XCTestCase {
 
     func test_componentRenderingAfterStateMutation() async {
         let store = EnvironmentStore(initial: AppState(), logger: TestStoreLogger())
+
         let itemsContainer = ItemsListContainer()
-
-        let window = await MainActor.run {
-            let window = UIWindow(frame: .zero)
-            let viewController = UIHostingController(rootView: itemsContainer)
-            window.rootViewController = viewController
-
-            viewController.beginAppearanceTransition(true, animated: false)
-            viewController.endAppearanceTransition()
-
-            viewController.view.setNeedsLayout()
-            viewController.view.layoutIfNeeded()
-            return window
-        }
+        let window = await PlatformWindow.render(container: itemsContainer)
 
         store.dispatch(Actions.UpdateFormField(keyPath: \PlainForm.title, value: "title 1"))
         await fulfill(description: "waiting for rendering", sleep: 1)
-        print(window) //To force a window redraw
+        print(window) // To force a window redraw
         await fulfill(description: "waiting for rendering", sleep: 1)
 
         XCTAssertEqual(itemsContainer.renderingNumber, 2)
@@ -75,20 +65,9 @@ final class ContainerScopeTests: XCTestCase {
 
     func test_rootComponentRendering() async {
         let store = EnvironmentStore(initial: AppState(), logger: TestStoreLogger())
+
         let rootContainer = RootContainer()
-
-        let window = await MainActor.run {
-            let window = UIWindow(frame: .zero)
-            let viewController = UIHostingController(rootView: rootContainer)
-            window.rootViewController = viewController
-
-            viewController.beginAppearanceTransition(true, animated: false)
-            viewController.endAppearanceTransition()
-
-            viewController.view.setNeedsLayout()
-            viewController.view.layoutIfNeeded()
-            return window
-        }
+        let window = await PlatformWindow.render(container: rootContainer)
 
         store.dispatch(Actions.UpdateFormField(keyPath: \PlainForm.title, value: "title 1"))
         await fulfill(description: "waiting for rendering", sleep: 1)
@@ -97,28 +76,27 @@ final class ContainerScopeTests: XCTestCase {
         store.dispatch(Actions.UpdateFormField(keyPath: \UserData.isUserLoggedIn, value: true))
         await fulfill(description: "waiting for rendering", sleep: 1)
 
-        print(window) //To force a window redraw
+        print(window) // To force a window redraw
         await fulfill(description: "waiting for rendering", sleep: 1)
         XCTAssertEqual(rootContainer.renderingNumber, 2)
 
         store.dispatch(Actions.UpdateFormField(keyPath: \UserData.isUserLoggedIn, value: false))
         await fulfill(description: "waiting for rendering", sleep: 1)
 
-        print(window) //To force a window redraw
+        print(window) // To force a window redraw
         await fulfill(description: "waiting for rendering", sleep: 1)
         XCTAssertEqual(rootContainer.renderingNumber, 3)
 
         store.dispatch(Actions.UpdateFormField(keyPath: \PlainForm.title, value: "title 2"))
         await fulfill(description: "waiting for rendering", sleep: 1)
 
-        print(window) //To force a window redraw
+        print(window) // To force a window redraw
         await fulfill(description: "waiting for rendering", sleep: 1)
         XCTAssertEqual(rootContainer.renderingNumber, 3)
     }
 }
 
-
-//MARK: - ItemsListContainer
+// MARK: - ItemsListContainer
 extension ContainerScopeTests {
     struct ItemsListContainer: Container {
         typealias ContainerComponent = ItemsListComponent
@@ -153,7 +131,7 @@ extension ContainerScopeTests {
     }
 }
 
-//MARK: - RootContainer
+// MARK: - RootContainer
 extension ContainerScopeTests {
     struct RootContainer: Container {
         typealias ContainerComponent = RootComponent

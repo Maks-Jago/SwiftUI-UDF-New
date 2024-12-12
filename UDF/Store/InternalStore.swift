@@ -5,8 +5,8 @@
 //  Created by Max Kuznetsov on 26.10.2022.
 //
 
-import Foundation
 import Combine
+import Foundation
 import SwiftUI
 
 actor InternalStore<State: AppReducer>: Store {
@@ -14,13 +14,11 @@ actor InternalStore<State: AppReducer>: Store {
 
     let subject: PassthroughSubject<(State, State, Animation?), Never> = .init()
 
-    var loggers: [ActionLogger]
-    var middlewares: [any Middleware] = []
+    var middlewares: OrderedSet<AnyMiddleware> = []
     private let storeQueue: StoreQueue = .init()
     private let logDistributor: LogDistributor
 
     init(initial state: State, loggers: [ActionLogger]) {
-        self.loggers = loggers
         self.state = state
         self.logDistributor = LogDistributor(loggers: loggers)
     }
@@ -30,30 +28,26 @@ actor InternalStore<State: AppReducer>: Store {
     }
 
     nonisolated func dispatch(_ action: some Action, priority: ActionPriority, fileName: String, functionName: String, lineNumber: Int) {
-        XCTestGroup.enter()
-        let internalAction: InternalAction = {
-            if let internalAction = action as? InternalAction {
-                return internalAction
-            }
+        XCTestGroup.shared.enter()
+        let internalActions = prepareActionsToReduce(action, fileName: fileName, functionName: functionName, lineNumber: lineNumber)
 
-            return InternalAction(
-                action,
-                fileName: fileName,
-                functionName: functionName,
-                lineNumber: lineNumber
-            )
-        }()
-
-        storeQueue.addOperation(
-            StoreOperation(priority: .init(priority)) { [weak self] in
+        for internalAction in internalActions {
+            let storeOperation = StoreOperation(priority: .init(priority)) { [weak self] in
                 await self?.reduce(internalAction)
-                XCTestGroup.leave()
             }
-        )
+
+            if let delay = internalAction.delay {
+                let delayedOperation = DelayedOperation(delay: delay, priority: .init(priority))
+                storeOperation.addDependency(delayedOperation)
+                storeQueue.addOperations([delayedOperation, storeOperation], waitUntilFinished: false)
+            } else {
+                storeQueue.addOperation(storeOperation)
+            }
+        }
     }
 
     func subscribe(_ middleware: some Middleware<State>) async {
-        middlewares.append(middleware)
+        middlewares.append(AnyMiddleware(middleware))
 
         switch middleware {
         case let middleware as any ObservableMiddleware<State>:
@@ -111,13 +105,47 @@ private extension InternalStore {
 
         return (oldState, newState, mutated)
     }
+
+    nonisolated func prepareActionsToReduce(
+        _ action: some Action,
+        fileName: String,
+        functionName: String,
+        lineNumber: Int
+    ) -> [InternalAction] {
+        let internalAction: InternalAction = {
+            if let internalAction = action as? InternalAction {
+                return internalAction
+            }
+
+            return InternalAction(
+                action,
+                fileName: fileName,
+                functionName: functionName,
+                lineNumber: lineNumber
+            )
+        }()
+
+        let delayedActions = internalAction.findDelayedActions()
+        let filteredActions = internalAction.unwrapActions(isIncluded: { $0.delay == nil })
+
+        if !filteredActions.isEmpty {
+            return [InternalAction(
+                ActionGroup(internalActions: filteredActions),
+                fileName: fileName,
+                functionName: functionName,
+                lineNumber: lineNumber
+            )] + delayedActions
+        }
+
+        return delayedActions
+    }
 }
 
 // MARK: Notify Methods
 private extension InternalStore {
-
     func notifyMiddlewares(_ actions: [InternalAction], oldState: Box<State>, newState: Box<State>) async {
-        for middleware in middlewares {
+        for anyMiddleware in middlewares {
+            let middleware = anyMiddleware.middleware
             switch middleware {
             case let middleware as any ReducibleMiddleware<State>:
                 await notifyReducible(middleware: middleware, actions: actions, newState: newState)
@@ -131,14 +159,16 @@ private extension InternalStore {
         }
     }
 
-    func notifyReducible<CR: ReducibleMiddleware>(middleware: CR, actions: [InternalAction], newState: Box<State>) async where CR.State == State {
+    func notifyReducible<CR: ReducibleMiddleware>(middleware: CR, actions: [InternalAction], newState: Box<State>) async
+        where CR.State == State
+    {
         let status = middleware.status(for: newState.value)
 
         await safetyCall(queue: middleware.queue) {
             if status == .suspend {
                 middleware.cancelAll()
             } else {
-                actions.forEach { action in
+                for action in actions {
                     middleware.reduce(action.value, for: newState.value)
                 }
             }
@@ -157,7 +187,9 @@ private extension InternalStore {
         }
     }
 
-    func notifyObservable<CO: ObservableMiddleware>(middleware: CO, oldState: Box<State>, newState: Box<State>) async where CO.State == State {
+    func notifyObservable<CO: ObservableMiddleware>(middleware: CO, oldState: Box<State>, newState: Box<State>) async
+        where CO.State == State
+    {
         let oldScope = middleware.scope(for: oldState.value)
         let newScope = middleware.scope(for: newState.value)
 
@@ -184,7 +216,7 @@ private extension InternalStore {
     }
 }
 
-fileprivate func safetyCall(queue: DispatchQueue, block: @Sendable @escaping () -> Void) async {
+private func safetyCall(queue: DispatchQueue, block: @Sendable @escaping () -> Void) async {
     await withUnsafeContinuation { continuation in
         if queue == .main {
             queue.async {
@@ -200,14 +232,14 @@ fileprivate func safetyCall(queue: DispatchQueue, block: @Sendable @escaping () 
     }
 }
 
-fileprivate final class Ref<T> {
+final class Ref<T> {
     var value: T
     init(value: T) {
         self.value = value
     }
 }
 
-fileprivate struct Box<T> {
+struct Box<T> {
     private var ref: Ref<T>
     init(_ value: T) {
         ref = Ref(value: value)

@@ -1,12 +1,12 @@
 //
 //  XCTestStore.swift
-//  
+//
 //
 //  Created by Max Kuznetsov on 05.10.2021.
 //
 
+import Combine
 import SwiftUI
-@preconcurrency import Combine
 
 @globalActor public actor XCTestStoreActor {
     public private(set) static var shared = XCTestStoreActor()
@@ -14,21 +14,22 @@ import SwiftUI
 
 @XCTestStoreActor
 public final class XCTestStore<State: AppReducer> {
-
     private struct TestStoreLogger: ActionLogger {
         var actionFilters: [ActionFilter] = [VerboseActionFilter()]
         var actionDescriptor: ActionDescriptor = StringDescribingActionDescriptor()
 
         func log(_ action: LoggingAction, description: String) {
             print("Reduce\t\t", description)
-            print("---------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
+            print(
+                "---------------------------------------------------------------------------------------------------------------------------------------------------------------------------"
+            )
         }
     }
 
     @SourceOfTruth public var state: State
 
     private var store: InternalStore<State>
-    private var cancelation: Cancellable? = nil
+    private var cancelation: Cancellable?
 
     public init(initial state: State) {
         guard ProcessInfo.processInfo.xcTest else {
@@ -43,7 +44,7 @@ public final class XCTestStore<State: AppReducer> {
         self._state = .init(wrappedValue: mutableState, store: store)
 
         self.cancelation = store.subject
-            .map { $0.0 }
+            .map(\.0)
             .assign(to: \.state, on: self)
     }
 
@@ -59,16 +60,8 @@ public final class XCTestStore<State: AppReducer> {
         await store.dispatch(InternalAction(action, fileName: fileName, functionName: functionName, lineNumber: lineNumber))
     }
 
-    public func wait(
-        fileName: String = #file,
-        functionName: String = #function,
-        lineNumber: Int = #line
-    ) {
-        XCTestGroup.wait(
-            fileName: fileName,
-            functionName: functionName,
-            lineNumber: lineNumber
-        )
+    public func wait() {
+        XCTestGroup.shared.wait()
     }
 }
 
@@ -79,7 +72,9 @@ public extension XCTestStore {
         }
     }
 
-    func subscribe<M: Middleware<State>>(_ middlewareType: M.Type, environment: M.Environment) async where M.State == State, M: EnvironmentMiddleware {
+    func subscribe<M: Middleware<State>>(_ middlewareType: M.Type, environment: M.Environment) async where M.State == State,
+        M: EnvironmentMiddleware
+    {
         await self.subscribe { store in
             middlewareType.init(store: store, environment: environment)
         }
@@ -87,7 +82,6 @@ public extension XCTestStore {
 }
 
 public extension XCTestStore {
-
     func subscribe(@MiddlewareBuilder<State> build: (_ store: any Store<State>) -> [MiddlewareWrapper<State>]) async {
         await self.subscribe(buildMiddlewares: { store in
             build(store).map { wrapper in
@@ -105,7 +99,9 @@ public extension XCTestStore {
         }
     }
 
-    private func envMiddleware<M: MiddlewareWithEnvironment<State>>(store: any Store<State>, type: M.Type) -> any Middleware<State> where M.State == State {
+    private func envMiddleware<M: MiddlewareWithEnvironment<State>>(store: any Store<State>, type: M.Type) -> any Middleware<State>
+        where M.State == State
+    {
         type.init(store: store, environment: type.buildTestEnvironment(for: store))
     }
 }

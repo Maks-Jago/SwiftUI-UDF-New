@@ -1,20 +1,17 @@
-import XCTest
-@testable import UDF
 import Combine
+@testable import UDF
+import XCTest
 
-@available(iOS 16.0.0, *)
-fileprivate extension Actions {
+private extension Actions {
     struct TestMiddleware: Action {
         var type: MiddlewareSubscriptionTests.TestMiddlewareType
     }
 }
 
-@available(iOS 16.0.0, *)
 final class MiddlewareSubscriptionTests: XCTestCase {
-
     func testMiddlewareSubscriptions() async {
         let store = await XCTestStore(initial: AppState())
-        
+
         await store.subscribe(build: { store in
             ObservableMiddleware.self
             ReducibleMiddleware(store: store)
@@ -27,7 +24,7 @@ final class MiddlewareSubscriptionTests: XCTestCase {
         await store.wait()
         type = await store.state.testForm.type
         XCTAssertEqual(type, .observable)
-        
+
         await store.dispatch(Actions.TestMiddleware(type: .reducible))
         await store.wait()
         type = await store.state.testForm.type
@@ -36,8 +33,8 @@ final class MiddlewareSubscriptionTests: XCTestCase {
 
     func testEnvironmentMiddlewareSubscription() async {
         let store = await XCTestStore(initial: AppState())
-        
-        await store.subscribe { store in
+
+        await store.subscribe { _ in
             EnvironmentMiddleware.self
         }
 
@@ -48,10 +45,10 @@ final class MiddlewareSubscriptionTests: XCTestCase {
 
     func liveEnvironmentMiddlewareSubscription() async {
         let store = await XCTestStore(initial: AppState())
-        
+
         setLiveEnvironment()
-        
-        await store.subscribe { store in
+
+        await store.subscribe { _ in
             EnvironmentMiddleware.self
         }
 
@@ -62,43 +59,39 @@ final class MiddlewareSubscriptionTests: XCTestCase {
 }
 
 // MARK: - AppState
-@available(iOS 16.0.0, *)
 extension MiddlewareSubscriptionTests {
-    
     enum TestMiddlewareType: String {
         case observable, reducible, testEnvironment, liveEnvironment
     }
-    
+
     struct AppState: AppReducer {
         var testForm = TestForm()
         var testFlow = TestFlow()
     }
-    
+
     enum TestFlow: IdentifiableFlow {
         case none, testing(TestMiddlewareType)
-        
+
         init() { self = .none }
-        
+
         mutating func reduce(_ action: some Action) {
             switch action {
             case let action as Actions.TestMiddleware where action.type == .observable:
                 self = .testing(action.type)
-                
+
             default:
                 break
             }
         }
     }
-    
+
     struct TestForm: Form {
         var type: TestMiddlewareType? = nil
     }
 }
 
-//MARK: - Middlewares
-@available(iOS 16.0.0, *)
+// MARK: - Middlewares
 extension MiddlewareSubscriptionTests {
-    
     struct TestMiddlewareEffect: Effectable {
         var type: TestMiddlewareType
 
@@ -109,32 +102,32 @@ extension MiddlewareSubscriptionTests {
             .eraseToAnyPublisher()
         }
     }
-    
+
     class ObservableMiddleware: BaseObservableMiddleware<AppState> {
         var environment: Void!
-        
+
         func scope(for state: AppState) -> Scope {
             state.testFlow
         }
-        
+
         func observe(state: AppState) {
             switch state.testFlow {
-            case .testing(let middlewareType):
+            case let .testing(middlewareType):
                 execute(
                     TestMiddlewareEffect(type: middlewareType)
                         .delay(duration: 0.2, queue: queue),
                     cancellation: middlewareType.rawValue
                 )
-                
+
             default:
                 break
             }
         }
     }
-    
+
     class ReducibleMiddleware: BaseReducibleMiddleware<AppState> {
         var environment: Void!
-        
+
         func reduce(_ action: some Action, for state: AppState) {
             switch action {
             case let action as Actions.TestMiddleware where action.type == .reducible:
@@ -149,7 +142,7 @@ extension MiddlewareSubscriptionTests {
             }
         }
     }
-    
+
     class EnvironmentMiddleware: BaseReducibleMiddleware<AppState> {
         static func buildLiveEnvironment(for store: some Store<AppState>) -> Environment {
             store.dispatch(
@@ -157,18 +150,18 @@ extension MiddlewareSubscriptionTests {
             )
             return Environment()
         }
-        
+
         static func buildTestEnvironment(for store: some Store<AppState>) -> Environment {
             store.dispatch(
                 Actions.UpdateFormField(keyPath: \TestForm.type, value: .testEnvironment)
             )
             return Environment()
         }
-        
+
         var environment: Environment!
-        
+
         struct Environment {}
-        
+
         func reduce(_ action: some Action, for state: AppState) {
             switch action {
             case let action as Actions.TestMiddleware where action.type == .testEnvironment:
@@ -185,7 +178,6 @@ extension MiddlewareSubscriptionTests {
     }
 }
 
-@available(iOS 16.0.0, *)
 private extension MiddlewareSubscriptionTests {
     private func setLiveEnvironment() {
         let original = class_getClassMethod(ProcessInfo.self, #selector(getter: ProcessInfo.processInfo))!
@@ -194,6 +186,6 @@ private extension MiddlewareSubscriptionTests {
     }
 }
 
-fileprivate extension ProcessInfo {
+private extension ProcessInfo {
     @objc class func isInTestEnvironment() -> Bool { false }
 }

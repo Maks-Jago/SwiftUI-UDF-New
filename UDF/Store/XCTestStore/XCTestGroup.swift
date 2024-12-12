@@ -1,42 +1,42 @@
 
 import Foundation
+import os
 
 public final class XCTestGroup {
-    private static var shared = XCTestGroup()
-    private lazy var group = DispatchGroup()
-    private lazy var groupQueue = DispatchQueue(label: "XCTestGroup")
+    static var shared = XCTestGroup()
+    private var group: OSAllocatedUnfairLock<DispatchGroup> = .init(initialState: DispatchGroup())
 
-    public static func enter(
+    public func enter(
         fileName: String = #file,
         functionName: String = #function,
         lineNumber: Int = #line
     ) {
         if ProcessInfo.processInfo.xcTest {
-            shared.groupQueue.sync {
-                shared.group.enter()
+            group.withLock { group in
+                group.enter()
             }
         }
     }
 
-    public static func leave(
+    public func leave(
         fileName: String = #file,
         functionName: String = #function,
         lineNumber: Int = #line
     ) {
         if ProcessInfo.processInfo.xcTest {
-            shared.groupQueue.sync {
-                shared.group.leave()
+            group.withLock { group in
+                group.leave()
             }
         }
     }
 
-    public static func wait(
+    public func wait(
         fileName: String = #file,
         functionName: String = #function,
         lineNumber: Int = #line
     ) {
         if ProcessInfo.processInfo.xcTest {
-            _ = shared.group.wait(timeout: .now() + 4)
+            _ = group.withLock { $0 }.wait(timeout: .now() + 4)
         }
     }
 }

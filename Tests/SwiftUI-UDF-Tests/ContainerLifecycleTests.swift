@@ -1,10 +1,9 @@
 
-import XCTest
-@testable import UDF
 import SwiftUI
+@testable import UDF
+import XCTest
 
 final class ContainerLifecycleTests: XCTestCase {
-    
     struct AppState: AppReducer {
         var userData = UserData()
     }
@@ -33,25 +32,13 @@ final class ContainerLifecycleTests: XCTestCase {
         let store = EnvironmentStore(initial: AppState(), logger: .consoleDebug)
         let rootContainer = RootContainer()
 
-        var window: UIWindow? = await MainActor.run {
-            let window = UIWindow(frame: .zero)
-            let viewController = UIHostingController(rootView: rootContainer)
-            window.rootViewController = viewController
-
-            viewController.beginAppearanceTransition(true, animated: false)
-            viewController.endAppearanceTransition()
-
-            viewController.view.setNeedsLayout()
-            viewController.view.layoutIfNeeded()
-            return window
-        }
-
-        print(window!) //To force a window redraw
+        var window: PlatformWindow? = await PlatformWindow.render(container: rootContainer)
+        print(window!) // To force a window redraw
 
         await fulfill(description: "waiting for rendering", sleep: 1)
         XCTAssertTrue(store.state.userData.didLoad)
 
-        window?.rootViewController = nil
+        window?.release()
         window = nil
 
         await fulfill(description: "waiting for rendering", sleep: 1)
@@ -68,7 +55,7 @@ extension ContainerLifecycleTests {
         }
 
         func map(store: EnvironmentStore<AppState>) -> RootComponent.Props {
-            return .init(
+            .init(
                 isUserLoggedIn: store.state.userData.isUserLoggedIn
             )
         }
@@ -102,7 +89,7 @@ extension ContainerLifecycleTests {
     }
 }
 
-fileprivate extension Actions {
+private extension Actions {
     struct ContainerDidLoad: Action {}
     struct ContainerDidUnload: Action {}
 }

@@ -1,9 +1,8 @@
-import XCTest
 import SwiftUI
 @testable import UDF
+import XCTest
 
 final class ContainerWithAppStateAsScopeTests: XCTestCase {
-
     @propertyWrapper
     final class Box<Value> {
         private var box: Value
@@ -24,7 +23,9 @@ final class ContainerWithAppStateAsScopeTests: XCTestCase {
 
         func log(_ action: LoggingAction, description: String) {
             print("Reduce\t\t", description)
-            print("---------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
+            print(
+                "---------------------------------------------------------------------------------------------------------------------------------------------------------------------------"
+            )
         }
     }
 
@@ -41,81 +42,66 @@ final class ContainerWithAppStateAsScopeTests: XCTestCase {
         var isUserLoggedIn: Bool = false
     }
 
-    func createWindow(with container: some Container) async  -> UIWindow {
-        await MainActor.run {
-            let window = UIWindow(frame: .zero)
-            let viewController = UIHostingController(rootView: container)
-            window.rootViewController = viewController
+    #if os(iOS)
+        func test_rootComponentRendering() async {
+            let store = EnvironmentStore(initial: AppState(), logger: TestStoreLogger())
+            let rootContainer = RootContainer()
+            let window = await PlatformWindow.render(container: rootContainer)
 
-            viewController.beginAppearanceTransition(true, animated: false)
-            viewController.endAppearanceTransition()
+            XCTAssertEqual(rootContainer.renderingNumber, 0)
+            await fulfill(description: "waiting for first rendering", sleep: 1)
+            XCTAssertEqual(rootContainer.renderingNumber, 1)
 
-            viewController.view.setNeedsLayout()
-            viewController.view.layoutIfNeeded()
-            return window
+            store.dispatch(Actions.UpdateFormField(keyPath: \PlainForm.title, value: "title 1"))
+            await fulfill(description: "waiting for rendering", sleep: 1)
+
+            print(window) // To force a window redraw
+            await fulfill(description: "waiting for rendering", sleep: 1)
+            XCTAssertEqual(rootContainer.renderingNumber, 2)
+
+            store.dispatch(Actions.UpdateFormField(keyPath: \UserData.isUserLoggedIn, value: true))
+            await fulfill(description: "waiting for rendering", sleep: 1)
+
+            print(window) // To force a window redraw
+            await fulfill(description: "waiting for rendering", sleep: 1)
+            XCTAssertEqual(rootContainer.renderingNumber, 3)
+
+            store.dispatch(Actions.UpdateFormField(keyPath: \UserData.isUserLoggedIn, value: false))
+            await fulfill(description: "waiting for rendering", sleep: 1)
+
+            print(window) // To force a window redraw
+            await fulfill(description: "waiting for rendering", sleep: 1)
+            XCTAssertEqual(rootContainer.renderingNumber, 4)
+
+            store.dispatch(Actions.UpdateFormField(keyPath: \PlainForm.title, value: "title 2"))
+            await fulfill(description: "waiting for rendering", sleep: 1)
+
+            print(window) // To force a window redraw
+            await fulfill(description: "waiting for rendering", sleep: 1)
+            XCTAssertEqual(rootContainer.renderingNumber, 5)
         }
-    }
 
-    func test_rootComponentRendering() async {
-        let store = EnvironmentStore(initial: AppState(), logger: TestStoreLogger())
-        let rootContainer = RootContainer()
-        let window = await createWindow(with: rootContainer)
+        func test_noneScope() async {
+            let store = EnvironmentStore(initial: AppState(), logger: TestStoreLogger())
+            let noneScopeContainer = NoneScopeContainer()
+            let window = await PlatformWindow.render(container: noneScopeContainer)
 
-        XCTAssertEqual(rootContainer.renderingNumber, 0)
-        await fulfill(description: "waiting for first rendering", sleep: 1)
-        XCTAssertEqual(rootContainer.renderingNumber, 1)
+            XCTAssertEqual(noneScopeContainer.renderingNumber, 0)
+            await fulfill(description: "waiting for first rendering", sleep: 1)
+            XCTAssertEqual(noneScopeContainer.renderingNumber, 1)
 
-        store.dispatch(Actions.UpdateFormField(keyPath: \PlainForm.title, value: "title 1"))
-        await fulfill(description: "waiting for rendering", sleep: 1)
+            store.dispatch(Actions.UpdateFormField(keyPath: \PlainForm.title, value: "title 1"))
+            await fulfill(description: "waiting for rendering", sleep: 1)
 
-        print(window) //To force a window redraw
-        await fulfill(description: "waiting for rendering", sleep: 1)
-        XCTAssertEqual(rootContainer.renderingNumber, 2)
-
-        store.dispatch(Actions.UpdateFormField(keyPath: \UserData.isUserLoggedIn, value: true))
-        await fulfill(description: "waiting for rendering", sleep: 1)
-
-        print(window) //To force a window redraw
-        await fulfill(description: "waiting for rendering", sleep: 1)
-        XCTAssertEqual(rootContainer.renderingNumber, 3)
-
-        store.dispatch(Actions.UpdateFormField(keyPath: \UserData.isUserLoggedIn, value: false))
-        await fulfill(description: "waiting for rendering", sleep: 1)
-
-        print(window) //To force a window redraw
-        await fulfill(description: "waiting for rendering", sleep: 1)
-        XCTAssertEqual(rootContainer.renderingNumber, 4)
-
-        store.dispatch(Actions.UpdateFormField(keyPath: \PlainForm.title, value: "title 2"))
-        await fulfill(description: "waiting for rendering", sleep: 1)
-
-        print(window) //To force a window redraw
-        await fulfill(description: "waiting for rendering", sleep: 1)
-        XCTAssertEqual(rootContainer.renderingNumber, 5)
-    }
-
-    func test_noneScope() async {
-        let store = EnvironmentStore(initial: AppState(), logger: TestStoreLogger())
-        let noneScopeContainer = NoneScopeContainer()
-        let window = await createWindow(with: noneScopeContainer)
-
-        XCTAssertEqual(noneScopeContainer.renderingNumber, 0)
-        await fulfill(description: "waiting for first rendering", sleep: 1)
-        XCTAssertEqual(noneScopeContainer.renderingNumber, 1)
-
-        store.dispatch(Actions.UpdateFormField(keyPath: \PlainForm.title, value: "title 1"))
-        await fulfill(description: "waiting for rendering", sleep: 1)
-
-        print(window) //To force a window redraw
-        XCTAssertEqual(noneScopeContainer.renderingNumber, 1)
-    }
+            print(window) // To force a window redraw
+            XCTAssertEqual(noneScopeContainer.renderingNumber, 1)
+        }
+    #endif
 }
 
-
-//MARK: - RootContainer
+// MARK: - RootContainer
 extension ContainerWithAppStateAsScopeTests {
     struct RootContainer: Container {
-
         func onContainerAppear(store: EnvironmentStore<AppState>) {}
         func onContainerDisappear(store: EnvironmentStore<AppState>) {}
         func onContainerDidLoad(store: EnvironmentStore<AppState>) {}
@@ -158,7 +144,7 @@ extension ContainerWithAppStateAsScopeTests {
     }
 }
 
-//MARK: - None scope container
+// MARK: - None scope container
 extension ContainerWithAppStateAsScopeTests {
     struct NoneScopeContainer: Container {
         typealias ContainerComponent = RootComponent
@@ -173,7 +159,9 @@ extension ContainerWithAppStateAsScopeTests {
             .none
         }
 
-        func map(store: EnvironmentStore<ContainerWithAppStateAsScopeTests.AppState>) -> ContainerWithAppStateAsScopeTests.RootComponent.Props {
+        func map(store: EnvironmentStore<ContainerWithAppStateAsScopeTests.AppState>) -> ContainerWithAppStateAsScopeTests.RootComponent
+            .Props
+        {
             renderingNumber += 1
             print("NoneScopeContainer: renderingNumber - \(renderingNumber)")
             return .init(isUserLoggedIn: false)

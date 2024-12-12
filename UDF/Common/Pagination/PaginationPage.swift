@@ -7,15 +7,19 @@
 
 import Foundation
 
+/// `PaginationPage` is an enumeration that represents the current page in a pagination process. It has two cases:
+/// - `number(Int)`: Represents a regular page number.
+/// - `lastPage(Int)`: Represents the last page in the pagination process.
 public enum PaginationPage {
     case number(Int)
     case lastPage(Int)
 
+    /// Returns the page number associated with the current case, whether it's a regular page or the last page.
     public var pageNumber: Int {
         switch self {
-        case .number(let page),
-             .lastPage(let page):
-            return page
+        case let .number(page),
+             let .lastPage(page):
+            page
         }
     }
 }
@@ -25,6 +29,10 @@ extension PaginationPage: Codable {
         case number, lastPage
     }
 
+    /// Decodes a `PaginationPage` from a JSON representation.
+    /// The initializer attempts to decode the page number from the given decoder.
+    /// It first looks for the `number` key; if not found, it attempts to find the `lastPage` key.
+    /// If neither is found, it defaults to `.number(1)`.
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
@@ -37,14 +45,16 @@ extension PaginationPage: Codable {
         }
     }
 
+    /// Encodes a `PaginationPage` into a JSON representation.
+    /// Depending on whether the page is a regular page or the last page, it encodes the associated page number using the appropriate key.
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
 
         switch self {
-        case .number(let pageNumber):
+        case let .number(pageNumber):
             try container.encode(pageNumber, forKey: .number)
 
-        case .lastPage(let pageNumber):
+        case let .lastPage(pageNumber):
             try container.encode(pageNumber, forKey: .lastPage)
         }
     }
